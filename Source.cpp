@@ -1,14 +1,19 @@
 #include "SDL/include/SDL.h"
 #include "SDL_Image/include/SDL_image.h"
+#include "SDL_Mixer/include/SDL_mixer.h"
+
 
 #pragma comment (lib, "SDL/libx86/SDL2.lib")
 #pragma comment (lib, "SDL/libx86/SDL2main.lib")
 #pragma comment (lib, "SDL_Image/libx86/SDL2_image.lib")
+#pragma comment (lib, "SDL_Mixer/libx86/SDL2_mixer.lib")
 
 
 int main(int argc, char * argv[]) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 	IMG_Init(IMG_INIT_PNG);
+	Mix_Init(MIX_INIT_OGG);
+	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
 
 	SDL_Window *window;
 	SDL_Renderer *renderer = NULL;
@@ -33,6 +38,11 @@ int main(int argc, char * argv[]) {
 	starship = IMG_LoadTexture(renderer, "assets/Spaceship.png");
 	bullet = IMG_LoadTexture(renderer, "assets/Laser.png");
 
+	Mix_Music *backmusic;
+	backmusic = Mix_LoadMUS ("music/background_music.ogg");
+
+	Mix_Chunk *laser;
+	laser = Mix_LoadWAV("music/laser.wav");
 
 	dstrect.x = anchventana*0.1;
 	dstrect.y = altventana*0.1;
@@ -60,6 +70,7 @@ int main(int argc, char * argv[]) {
 					case SDLK_DOWN: down = 1; break;
 					case SDLK_ESCAPE: running = 0; break;
 					case SDLK_SPACE: 
+						Mix_PlayChannel(-1, laser, 0);
 						misile.x = dstrect.x+ dstrect.w;
 						misile.y = dstrect.y+ (dstrect.h/3);
 						misile.w = dstrect.w/3;
@@ -106,13 +117,22 @@ int main(int argc, char * argv[]) {
 		SDL_RenderCopy(renderer, starship, NULL, &dstrect);
 		SDL_RenderPresent(renderer);
 
+		if (Mix_PlayingMusic() == 0 && running == 1)
+			{
+				Mix_PlayMusic(backmusic, -1);
+			}
+			else
+				;
+		
 	}
-	
 	SDL_DestroyTexture(bullet);
 	SDL_DestroyTexture(starship);
 	SDL_DestroyTexture(background);
-	IMG_Quit();
+	Mix_FreeChunk(laser);
+	Mix_FreeMusic(backmusic);
 	SDL_Quit();
+	IMG_Quit();
+	Mix_Quit();
 
 	return 0;
 }
